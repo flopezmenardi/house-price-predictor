@@ -34,7 +34,8 @@ house-price-predictor/
 ├── notebooks/
 │   ├── analysis-pipeline.ipynb          # Análisis exploratorio
 │   ├── transformation-pipeline.ipynb    # Limpieza y transformación
-│   └── modeling-pipeline.ipynb        # Entrenamiento de modelos
+│   ├── modeling-pipeline.ipynb          # Entrenamiento completo (exploratorio)
+│   └── train-model.ipynb                # Entrenamiento rápido del modelo final
 ├── app.py                              # Aplicación Streamlit
 ├── requirements.txt                    # Dependencias del proyecto
 └── README.md                           # Este archivo
@@ -84,6 +85,18 @@ Ejecutar el notebook `transformation-pipeline.ipynb` para:
 
 ### 3. Entrenamiento del Modelo
 
+#### Opción Rápida (Recomendada para uso rápido)
+
+Para obtener el modelo entrenado rápidamente y poner la aplicación en funcionamiento, ejecutar el notebook `train-model.ipynb`:
+- Entrena directamente el modelo Random Forest con los mejores hiperparámetros encontrados
+- Proceso optimizado sin exploración ni comparación de modelos
+- Guarda el modelo listo para usar en `models/`
+- **Tiempo estimado**: ~2-5 minutos
+
+Luego puedes pasar directamente al paso 4 para ejecutar la aplicación.
+
+#### Opción Completa (Análisis Exploratorio)
+
 Ejecutar el notebook `modeling-pipeline.ipynb` para:
 - Cargar datos limpios
 - Aplicar feature engineering (encoding de variables categóricas)
@@ -93,7 +106,7 @@ Ejecutar el notebook `modeling-pipeline.ipynb` para:
 - Optimizar hiperparámetros
 - Guardar el mejor modelo en `models/`
 
-**Nota:** Este proceso puede tardar varios minutos dependiendo del hardware.
+**Nota:** Este proceso puede tardar 30 minutos o más dependiendo del hardware, ya que incluye la exploración completa de modelos y optimización de hiperparámetros.
 
 ### 4. Aplicación Web
 
@@ -177,39 +190,5 @@ Los modelos se evalúan usando:
 
 4. **Coordenadas**: Si no se especifican coordenadas en la app, se usan las coordenadas promedio del barrio seleccionado.
 
-## 🐛 Solución de Problemas
-
-### Error: "Modelo no encontrado"
-- Asegúrate de haber ejecutado el notebook `modeling-pipeline.ipynb` primero
-- Verifica que exista el archivo `models/rental_price_model.pkl`
-
-### Error al cargar datos en la app
-- Verifica que exista `output/alquiler_AMBA_clean.csv`
-- Ejecuta primero `transformation-pipeline.ipynb` si falta
-
-### Predicciones poco realistas
-- Verifica que los valores ingresados estén en rangos razonables
-- Revisa que el modelo haya sido entrenado correctamente
-
-## 📚 Referencias
-
-- Dataset: Precios de alquiler de Mercado Libre Argentina (2021-2022)
-- Framework: Streamlit para la aplicación web
-- Librerías: scikit-learn, XGBoost para modelos de ML
-
-## 📄 Licencia
-
-Este proyecto es parte de un trabajo académico.
-
-## 🔄 Próximas Mejoras
-
-- [ ] Implementar pipeline de transformación para el test set
-- [ ] Agregar más visualizaciones interactivas
-- [ ] Implementar intervalos de confianza para las predicciones
-- [ ] Agregar explicabilidad del modelo (SHAP values)
-- [ ] Mejorar manejo de valores faltantes en la app
-- [ ] Agregar exportación de resultados
-
 ---
 
-**Última actualización**: 2025

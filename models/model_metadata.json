@@ -1,6 +1,12 @@
 {
   "model_name": "Random Forest",
   "model_type": "RandomForestRegressor",
+  "hyperparameters": {
+    "n_estimators": 200,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2,
+    "max_depth": 25
+  },
   "features": [
     "STotalM2",
     "Dormitorios",
@@ -427,7 +433,6 @@
     "ITE_ADD_NEIGHBORHOOD_NAME_Quilmes",
     "ITE_ADD_NEIGHBORHOOD_NAME_Quilmes Oeste",
     "ITE_ADD_NEIGHBORHOOD_NAME_R2",
-    "ITE_ADD_NEIGHBORHOOD_NAME_RECOLETA",
     "ITE_ADD_NEIGHBORHOOD_NAME_Rafael Calzada",
     "ITE_ADD_NEIGHBORHOOD_NAME_Rafael Castillo",
     "ITE_ADD_NEIGHBORHOOD_NAME_Ramos Mejía",
@@ -566,25 +571,25 @@
     "estacion_primavera",
     "estacion_verano"
   ],
-  "feature_count": 563,
+  "feature_count": 562,
   "training_samples": 76628,
   "validation_samples": 19157,
   "metrics": {
     "train": {
-      "RMSE": 3990.890337816453,
-      "MAE": 1786.710097986587,
-      "R²": 0.963797912546321,
-      "MAPE": 12.580398363071952
+      "RMSE": 3810.2858128430153,
+      "MAE": 1585.1064117886838,
+      "R²": 0.9670003653353929,
+      "MAPE": 10.441665467975337
     },
     "validation": {
-      "RMSE": 7662.029225164677,
-      "MAE": 3121.0528951195415,
-      "R²": 0.857219935010392,
-      "MAPE": 19.44657879777018
+      "RMSE": 7653.683147846321,
+      "MAE": 3119.8349788494097,
+      "R²": 0.8575308198703087,
+      "MAPE": 19.44328828108346
     }
   },
   "random_state": 42,
-  "date_trained": "2025-11-14 17:57:56",
+  "date_trained": "2025-11-14 20:03:03",
   "target_column": "precio_pesos_constantes",
   "categorical_columns": [
     "ITE_ADD_CITY_NAME",
