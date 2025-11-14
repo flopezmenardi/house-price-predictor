@@ -1,5 +1,26 @@
 venv/
 .DS_Store
 
-/Users/chrisijjas/Desktop/itba/house-price-predictor/data/Encuanciado de PF - Precios de Alquiler en el AMBA.pdf
-/Users/chrisijjas/Desktop/itba/house-price-predictor/data/mapa_amba.html
+# Modelos entrenados (demasiado grandes para GitHub)
+models/*.pkl
+models/*.joblib
+
+# Datos grandes
+data/*.csv
+data/*.pdf
+data/*.html
+
+# Outputs temporales
+output/*.csv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
