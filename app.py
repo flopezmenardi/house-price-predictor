@@ -4,14 +4,11 @@ Aplicación Streamlit para Predicción de Precios de Alquiler en AMBA
 
 import streamlit as st
 import pandas as pd
-import numpy as np
 import joblib
 import json
 import os
-from datetime import datetime
 from pathlib import Path
 import urllib.request
-import tempfile
 
 # Obtener el directorio base del proyecto
 BASE_DIR = Path(__file__).parent.resolve()
@@ -62,47 +59,82 @@ def load_model():
         st.exception(e)
         st.stop()
     
-    # Verificar si el modelo existe
+    # Verificar si el modelo existe, si no, intentar descargarlo
     if not model_path.exists():
-        st.error("❌ Modelo no encontrado.")
-        st.error(f"Buscando en: {model_path}")
-        st.error(f"Directorio actual: {BASE_DIR}")
+        # Intentar descargar desde URL si está configurada (vía secrets o env var)
+        model_url = None
+        model_url = os.getenv('MODEL_URL')
         
-        # Mostrar archivos disponibles
-        models_dir = BASE_DIR / 'models'
-        if models_dir.exists():
-            files = list(models_dir.glob('*'))
-            st.info(f"Archivos encontrados en models/: {[f.name for f in files]}")
+        if not model_url:
+            try:
+                model_url = st.secrets.get('MODEL_URL', None)
+            except (AttributeError, KeyError):
+                pass
         
-        st.markdown("---")
-        st.markdown("### 📦 Instrucciones para Deployment")
-        st.markdown("""
-        El modelo es demasiado grande (398MB) para incluirlo directamente en Git.
-        
-        **Opciones para deployment:**
-        
-        1. **Git LFS (Recomendado):**
-           ```bash
-           git lfs install
-           git lfs track "models/*.pkl"
-           git add .gitattributes
-           git add models/rental_price_model.pkl
-           git commit -m "Add model with Git LFS"
-           git push
-           ```
-        
-        2. **Almacenamiento externo:**
-           - Sube el modelo a Google Drive, Dropbox, o S3
-           - Configura una variable de entorno con la URL
-           - El código descargará automáticamente el modelo
-        
-        3. **Incluir en el repo:**
-           - Si tu plataforma de deployment lo permite, puedes modificar `.gitignore`
-           - Ten en cuenta que GitHub tiene límites de tamaño de archivo
-        
-        Para desarrollo local, ejecuta el notebook `4.train-model.ipynb` para generar el modelo.
-        """)
-        st.stop()
+        if model_url:
+            try:
+                st.info("📥 Descargando modelo desde URL externa...")
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                # Crear directorio si no existe
+                model_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                # Descargar modelo
+                urllib.request.urlretrieve(model_url, str(model_path))
+                progress_bar.progress(100)
+                status_text.text("✅ Modelo descargado exitosamente")
+                st.success("✅ Modelo descargado. Recargando la aplicación...")
+                st.cache_data.clear()
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Error al descargar el modelo: {str(e)}")
+                st.info("Verifica que la URL sea accesible públicamente y que el archivo sea válido.")
+                st.stop()
+        else:
+            st.error("❌ Modelo no encontrado.")
+            st.error(f"Buscando en: {model_path}")
+            st.error(f"Directorio actual: {BASE_DIR}")
+            
+            # Mostrar archivos disponibles
+            models_dir = BASE_DIR / 'models'
+            if models_dir.exists():
+                files = list(models_dir.glob('*'))
+                st.info(f"Archivos encontrados en models/: {[f.name for f in files]}")
+            
+            st.markdown("---")
+            st.markdown("### 📦 Instrucciones para Deployment")
+            st.markdown("""
+            El modelo es demasiado grande (398MB) para incluirlo directamente en Git.
+            
+            **Opciones para deployment:**
+            
+            1. **Usar almacenamiento externo (Recomendado para Streamlit Cloud):**
+               - Sube el modelo a un servicio de almacenamiento (Google Drive, Dropbox, GitHub Releases, S3, etc.)
+               - En Streamlit Cloud, ve a Settings → Secrets y agrega:
+                 ```toml
+                 MODEL_URL = "https://tu-url-del-modelo.pkl"
+                 ```
+               - El código descargará automáticamente el modelo en el primer uso
+            
+            2. **Git LFS:**
+               ```bash
+               # Instalar Git LFS primero
+               brew install git-lfs  # macOS
+               # o descargar desde: https://git-lfs.github.com/
+               
+               git lfs install
+               git lfs track "models/*.pkl"
+               git add .gitattributes
+               git add models/rental_price_model.pkl
+               git commit -m "Add model with Git LFS"
+               git push
+               ```
+            
+            3. **Para desarrollo local:**
+               Ejecuta el notebook `4.train-model.ipynb` para generar el modelo localmente.
+            """)
+            st.stop()
     
     try:
         model = joblib.load(model_path)
@@ -124,7 +156,7 @@ def load_data_for_categories():
             return df
         else:
             return None
-    except Exception as e:
+    except Exception:
         return None
 
 # Cargar modelo y datos
@@ -447,7 +479,7 @@ if predict_button:
         col_result1, col_result2 = st.columns([2, 1])
         
         with col_result1:
-            st.markdown(f"### 💰 Precio Predicho de Alquiler Mensual")
+            st.markdown("### 💰 Precio Predicho de Alquiler Mensual")
             st.markdown(f"# ${prediction:,.2f}")
             st.caption("Precio en pesos constantes")
         

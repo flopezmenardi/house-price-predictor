@@ -1,9 +1,9 @@
 venv/
 .DS_Store
 
-# Modelos entrenados (demasiado grandes para GitHub)
-# Nota: Para deployment, considera usar Git LFS o almacenamiento externo
-models/*.pkl
+# Modelos entrenados (manejados por Git LFS)
+# Git LFS trackea models/*.pkl, así que no los ignoramos aquí
+# models/*.pkl  # Comentado porque Git LFS lo maneja
 models/*.joblib
 
 # Permitir archivos JSON de metadata (son pequeños)
