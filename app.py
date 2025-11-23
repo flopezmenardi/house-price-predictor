@@ -9,6 +9,12 @@ import joblib
 import json
 import os
 from datetime import datetime
+from pathlib import Path
+import urllib.request
+import tempfile
+
+# Obtener el directorio base del proyecto
+BASE_DIR = Path(__file__).parent.resolve()
 
 # Configuración de la página
 st.set_page_config(
@@ -30,21 +36,80 @@ en el Área Metropolitana de Buenos Aires (AMBA) para predecir el precio de alqu
 @st.cache_data
 def load_model():
     """Carga el modelo entrenado y sus metadatos"""
-    model_path = 'models/rental_price_model.pkl'
-    metadata_path = 'models/model_metadata.json'
-    preprocessing_path = 'models/preprocessing_info.json'
+    model_path = BASE_DIR / 'models' / 'rental_price_model.pkl'
+    metadata_path = BASE_DIR / 'models' / 'model_metadata.json'
+    preprocessing_path = BASE_DIR / 'models' / 'preprocessing_info.json'
     
-    if not os.path.exists(model_path):
-        st.error("❌ Modelo no encontrado. Por favor, ejecuta primero el notebook de modelado.")
+    # Verificar metadatos primero (son más pequeños y deberían estar en el repo)
+    if not metadata_path.exists():
+        st.error(f"❌ Metadatos no encontrados en: {metadata_path}")
+        st.error(f"Directorio actual: {BASE_DIR}")
+        st.info("💡 **Para deployment:** Asegúrate de que los archivos JSON de metadata estén en el repositorio.")
         st.stop()
     
-    model = joblib.load(model_path)
+    if not preprocessing_path.exists():
+        st.error(f"❌ Información de preprocesamiento no encontrada en: {preprocessing_path}")
+        st.stop()
     
-    with open(metadata_path, 'r', encoding='utf-8') as f:
-        metadata = json.load(f)
+    # Cargar metadatos primero
+    try:
+        with open(metadata_path, 'r', encoding='utf-8') as f:
+            metadata = json.load(f)
+        with open(preprocessing_path, 'r', encoding='utf-8') as f:
+            preprocessing_info = json.load(f)
+    except Exception as e:
+        st.error(f"❌ Error al cargar metadatos: {str(e)}")
+        st.exception(e)
+        st.stop()
     
-    with open(preprocessing_path, 'r', encoding='utf-8') as f:
-        preprocessing_info = json.load(f)
+    # Verificar si el modelo existe
+    if not model_path.exists():
+        st.error("❌ Modelo no encontrado.")
+        st.error(f"Buscando en: {model_path}")
+        st.error(f"Directorio actual: {BASE_DIR}")
+        
+        # Mostrar archivos disponibles
+        models_dir = BASE_DIR / 'models'
+        if models_dir.exists():
+            files = list(models_dir.glob('*'))
+            st.info(f"Archivos encontrados en models/: {[f.name for f in files]}")
+        
+        st.markdown("---")
+        st.markdown("### 📦 Instrucciones para Deployment")
+        st.markdown("""
+        El modelo es demasiado grande (398MB) para incluirlo directamente en Git.
+        
+        **Opciones para deployment:**
+        
+        1. **Git LFS (Recomendado):**
+           ```bash
+           git lfs install
+           git lfs track "models/*.pkl"
+           git add .gitattributes
+           git add models/rental_price_model.pkl
+           git commit -m "Add model with Git LFS"
+           git push
+           ```
+        
+        2. **Almacenamiento externo:**
+           - Sube el modelo a Google Drive, Dropbox, o S3
+           - Configura una variable de entorno con la URL
+           - El código descargará automáticamente el modelo
+        
+        3. **Incluir en el repo:**
+           - Si tu plataforma de deployment lo permite, puedes modificar `.gitignore`
+           - Ten en cuenta que GitHub tiene límites de tamaño de archivo
+        
+        Para desarrollo local, ejecuta el notebook `4.train-model.ipynb` para generar el modelo.
+        """)
+        st.stop()
+    
+    try:
+        model = joblib.load(model_path)
+    except Exception as e:
+        st.error(f"❌ Error al cargar el modelo: {str(e)}")
+        st.exception(e)
+        st.stop()
     
     return model, metadata, preprocessing_info
 
@@ -53,34 +118,45 @@ def load_model():
 def load_data_for_categories():
     """Carga datos para obtener valores únicos de categorías"""
     try:
-        df = pd.read_csv('output/alquiler_AMBA_clean.csv')
-        return df
-    except:
+        data_path = BASE_DIR / 'output' / 'alquiler_AMBA_clean.csv'
+        if data_path.exists():
+            df = pd.read_csv(data_path)
+            return df
+        else:
+            return None
+    except Exception as e:
         return None
 
 # Cargar modelo y datos
+model = None
+metadata = None
+preprocessing_info = None
+df_data = None
+
 try:
     model, metadata, preprocessing_info = load_model()
     df_data = load_data_for_categories()
 except Exception as e:
     st.error(f"Error al cargar el modelo: {str(e)}")
+    st.exception(e)
     st.stop()
 
 # Sidebar con información del modelo
 with st.sidebar:
-    st.header("ℹ️ Información del Modelo")
-    st.write(f"**Modelo:** {metadata['model_name']}")
-    st.write(f"**Tipo:** {metadata['model_type']}")
-    st.write(f"**Fecha de entrenamiento:** {metadata['date_trained']}")
-    st.write(f"**Muestras de entrenamiento:** {metadata['training_samples']:,}")
-    
-    st.markdown("---")
-    st.header("📊 Métricas del Modelo")
-    val_metrics = metadata['metrics']['validation']
-    st.write(f"**RMSE:** ${val_metrics['RMSE']:,.2f}")
-    st.write(f"**MAE:** ${val_metrics['MAE']:,.2f}")
-    st.write(f"**R²:** {val_metrics['R²']:.4f}")
-    st.write(f"**MAPE:** {val_metrics['MAPE']:.2f}%")
+    if metadata:
+        st.header("ℹ️ Información del Modelo")
+        st.write(f"**Modelo:** {metadata['model_name']}")
+        st.write(f"**Tipo:** {metadata['model_type']}")
+        st.write(f"**Fecha de entrenamiento:** {metadata['date_trained']}")
+        st.write(f"**Muestras de entrenamiento:** {metadata['training_samples']:,}")
+        
+        st.markdown("---")
+        st.header("📊 Métricas del Modelo")
+        val_metrics = metadata['metrics']['validation']
+        st.write(f"**RMSE:** ${val_metrics['RMSE']:,.2f}")
+        st.write(f"**MAE:** ${val_metrics['MAE']:,.2f}")
+        st.write(f"**R²:** {val_metrics['R²']:.4f}")
+        st.write(f"**MAPE:** {val_metrics['MAPE']:.2f}%")
     
     st.markdown("---")
     st.markdown("**Desarrollado por:**")

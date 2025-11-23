@@ -2,8 +2,12 @@ venv/
 .DS_Store
 
 # Modelos entrenados (demasiado grandes para GitHub)
+# Nota: Para deployment, considera usar Git LFS o almacenamiento externo
 models/*.pkl
 models/*.joblib
+
+# Permitir archivos JSON de metadata (son pequeños)
+!models/*.json
 
 # Datos grandes
 data/*.csv
