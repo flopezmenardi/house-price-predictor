@@ -600,9 +600,10 @@ if predict_button:
             feature_names = preprocessing_info["feature_names"]
 
             # Ensure all necessary columns are present
-            for feature in feature_names:
-                if feature not in df_encoded.columns:
-                    df_encoded[feature] = 0
+            missing_features = [f for f in feature_names if f not in df_encoded.columns]
+            if missing_features:
+                df_missing = pd.DataFrame(0, index=df_encoded.index, columns=missing_features)
+                df_encoded = pd.concat([df_encoded, df_missing], axis=1)
 
             # Reorder columns to match training
             df_encoded = df_encoded[feature_names]
