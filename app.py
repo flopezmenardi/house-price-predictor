@@ -658,11 +658,14 @@ if predict_button:
             )
 
             if df_data is not None:
+                # Filtrar propiedades similares
                 similar_props = df_data[
-                    (df_data["STotalM2"] >= superficie * 0.8)
-                    & (df_data["STotalM2"] <= superficie * 1.2)
-                    & (df_data["Dormitorios"] == dormitorios)
-                    & (df_data["Banos"] == banos)
+                    (df_data['STotalM2'] >= superficie * 0.8) &
+                    (df_data['STotalM2'] <= superficie * 1.2) &
+                    (df_data['Dormitorios'] == dormitorios) &
+                    (df_data['Banos'] == banos) &
+                    (df_data['ITE_ADD_CITY_NAME'] == ciudad) &
+                    (df_data['ITE_ADD_NEIGHBORHOOD_NAME'] == barrio)
                 ]
 
                 if len(similar_props) > 0:
